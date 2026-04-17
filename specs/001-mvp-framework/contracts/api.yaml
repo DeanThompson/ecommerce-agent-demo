@@ -1,0 +1,271 @@
+openapi: 3.0.3
+info:
+  title: E-Commerce Insight Agent API
+  description: 电商数据分析智能助手 API
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3001/api
+    description: 本地开发服务器
+
+paths:
+  /chat:
+    post:
+      summary: 发送对话消息
+      description: 发送用户消息并获取 SSE 流式响应
+      operationId: sendMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: SSE 流式响应
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: |
+                  SSE 事件流，包含以下事件类型：
+                  - text: 文本输出
+                  - tool_call: 工具调用
+                  - tool_result: 工具结果
+                  - chart: 图表数据
+                  - done: 完成
+                  - error: 错误
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: 服务器错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /sessions:
+    get:
+      summary: 获取会话列表
+      description: 获取所有会话的摘要信息
+      operationId: listSessions
+      responses:
+        '200':
+          description: 会话列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionListResponse'
+
+  /sessions/{sessionId}:
+    get:
+      summary: 获取会话详情
+      description: 获取指定会话的完整对话历史
+      operationId: getSession
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 会话详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '404':
+          description: 会话不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: 删除会话
+      description: 删除指定会话
+      operationId: deleteSession
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 删除成功
+        '404':
+          description: 会话不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health:
+    get:
+      summary: 健康检查
+      description: 检查服务状态
+      operationId: healthCheck
+      responses:
+        '200':
+          description: 服务正常
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: 用户消息内容
+          example: "2017年销售额是多少？"
+        sessionId:
+          type: string
+          format: uuid
+          description: 会话ID，不传则创建新会话
+
+    SessionListResponse:
+      type: object
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SessionSummary'
+
+    SessionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          description: 会话标题（首条消息摘要）
+        messageCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SessionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+        charts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChartConfig'
+        timestamp:
+          type: string
+          format: date-time
+
+    ChartConfig:
+      type: object
+      required:
+        - type
+        - title
+        - data
+      properties:
+        type:
+          type: string
+          enum: [metric, table]
+        title:
+          type: string
+        data:
+          type: array
+          items:
+            type: object
+        config:
+          type: object
+          properties:
+            value:
+              type: number
+            unit:
+              type: string
+            compareValue:
+              type: number
+            compareLabel:
+              type: string
+            trend:
+              type: string
+              enum: [up, down]
+            columns:
+              type: array
+              items:
+                $ref: '#/components/schemas/TableColumn'
+
+    TableColumn:
+      type: object
+      properties:
+        key:
+          type: string
+        title:
+          type: string
+        dataType:
+          type: string
+          enum: [string, number, date]
+        format:
+          type: string
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded, error]
+        version:
+          type: string
+        database:
+          type: string
+          enum: [connected, disconnected]
+        timestamp:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string

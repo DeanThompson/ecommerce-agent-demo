@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env*
+!.env.example
+!.env.sample
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# DuckDB database (generated)
+data/ecommerce.duckdb
+data/ecommerce_bench.duckdb
+data/ecommerce.db
+
+# Raw data files (download separately)
+data/raw/*.csv
+
+# JSONL session store (generated)
+data/sessions/*.jsonl
+data/sessions/index.json
+
+# Test coverage
+coverage/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Temporary files
+*.tmp
+*.temp
+
+# pnpm store
+.pnpm-store/

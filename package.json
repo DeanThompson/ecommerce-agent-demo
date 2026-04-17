@@ -1,0 +1,32 @@
+{
+  "name": "ecommerce-agent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "E-Commerce Insight Agent MVP - 电商数据分析智能助手",
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\"",
+    "build": "pnpm --filter backend build && pnpm --filter frontend build",
+    "build:ci": "pnpm run build",
+    "import-data": "pnpm --filter backend run import-data",
+    "lint": "pnpm -r lint",
+    "lint:ci": "pnpm run lint",
+    "test": "pnpm -r test",
+    "test:ci": "pnpm -r test:ci",
+    "quality": "pnpm lint && pnpm build && pnpm test"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "prettier": "^3.8.1",
+    "typescript": "^5.3.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@duckdb/node-bindings",
+      "esbuild"
+    ]
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
